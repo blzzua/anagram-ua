@@ -6,14 +6,12 @@ import os
 # from os import system as shellexec
 shellexec = os.system
 
-alphabet = ( 'а', 'б', 'в', 'г', 'ґ', 'д', 'е', 'є', 'ж', 'з', 'и', 'і', 'ї', 'й', 'к', 'л', 'м', \
-             'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ь', 'ю', 'я' )
-consonant =  { 'а': 0, 'б': 1, 'в': 1, 'г': 1, 'ґ': 1, 'д': 1, 'е': 0, 'є': 0, 'ж': 1, 'з': 1, 'и': 0, \
-               'і': 0, 'ї': 1, 'й': 1, 'к': 1, 'л': 1, 'м': 1, 'н': 1, 'о': 0, 'п': 1, 'р': 1, 'с': 1, \
-               'т': 1, 'у': 0, 'ф': 1, 'х': 1, 'ц': 1, 'ч': 1, 'ш': 1, 'щ': 1, 'ь': 1, 'ю': 0, 'я': 0 }
+def init_dict():
+    if not os.path.isfile('uadict.txt'):
+        shellexec( "aspell -l uk dump master | aspell -l uk expand |  tr ' ' '\n'  > uadict.txt")
 
 def test_word( word ):
-    #remove alphabet symbol
+    #remove nonalphabet symbol
     word = ''.join([letter for letter in word if letter in alphabet])
     ret_value=bool()
     consmask=''.join( [ str(consonant[i]) for i in word ] )
@@ -25,14 +23,53 @@ def test_word( word ):
     return ret_value
 
 if __name__ == '__main__' :
-    shellexec( "aspell -l uk dump master | aspell -l uk expand |  tr ' ' '\n'  > /tmp/uadict.txt")
     resfile = open ('/tmp/permutations.txt', mode = 'w', encoding='utf8' )
-    word = 'пирлакан'
+
     if len(sys.argv) > 0:
         word = sys.argv[1]
-    for i in itertools.permutations( word ):
-        if test_word (i):
-            resfile.writelines (''.join(i)+'\n')
-    resfile.close()
-    shellexec("fgrep -w -f /tmp/permutations.txt /tmp/uadict.txt || fgrep -f /tmp/permutations.txt /tmp/uadict.txt  ")
+        word_len = len(word)
+    else:
+        os._exit(1)
+    init_dict()
+
+    same_len_words = list()
+    with open('uadict.txt', 'r') as f:
+        while True:
+            line = f.readline()
+            if line:
+                if len(line.strip()) == word_len:
+                    same_len_words.append(line.strip())
+            else:
+                break
+
+    ## len, count statistics:
+    """
+    01    8
+    02    117
+    03    1389
+    04    7182
+    05    24217
+    06    54478
+    07    104090
+    08    160706
+    09    204320
+    10    222147
+    11    207763
+    12    170281
+    13    123577
+    14    83003
+    15    52937
+    16    31515
+    17    18789
+    18    11142
+    19    7123
+    20    4443
+    21    2864
+    22    1910
+    23    1221
+    """
+
+    for i in itertools.permutations(word):
+        if ''.join(i) in same_len_words:
+            print(''.join(i))
 
